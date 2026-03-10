@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DDPL Shot Clock</title>
+    <style>
+        :root {
+            --ddpl-red: #e63946;
+            --ddpl-yellow: #ffbe0b;
+            --ddpl-dark: #121212;
+            --ddpl-grey: #2d2d2d;
+            --ddpl-green: #2ecc71;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--ddpl-dark); 
+            color: white; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header { 
+            padding: 10px; 
+            background: #000; 
+            border-bottom: 3px solid var(--ddpl-yellow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left { display: flex; align-items: center; }
+        .logo { height: 60px; width: auto; }
+        h1 { font-size: 1rem; margin-left: 10px; color: var(--ddpl-yellow); text-transform: uppercase; letter-spacing: 1px; margin-top: 0; margin-bottom: 0; }
+
+        .timer-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .timer-display { font-size: 14rem; font-weight: 800; line-height: 1; transition: color 0.2s; }
+        .warning { color: var(--ddpl-red); animation: blink 0.5s infinite; }
+
+        #pause-btn {
+            background: #333;
+            color: white;
+            border: 2px solid #555;
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: -10px;
+            z-index: 10;
+        }
+        #pause-btn.paused { background: var(--ddpl-green); color: black; border-color: white; }
+
+        .teams-container { display: flex; height: 32vh; border-top: 2px solid #444; }
+        .team-btn { 
+            flex: 1; padding: 15px; border: none; color: white; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: space-between;
+            background: var(--ddpl-grey); outline: none; transition: 0.2s;
+        }
+        #team1-btn { border-right: 1px solid #444; }
+        .active-team { background: #0f301a !important; box-shadow: inset 0 0 50px rgba(0,255,0,0.15); }
+        .active-team h2 { color: #00ff00; margin: 5px 0; }
+
+        .ext-indicator { font-size: 0.75rem; font-weight: bold; color: var(--ddpl-yellow); }
+        .ext-used { color: #555 !important; text-decoration: line-through; }
+        .btn-extension { background: var(--ddpl-yellow); color: black; border: none; padding: 10px; font-weight: bold; border-radius: 4px; text-transform: uppercase; }
+        .btn-extension:disabled { background: #444; color: #888; }
+
+        .sponsor-box {
+            background: #fff; color: #000; height: 55px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; border-top: 5px solid var(--ddpl-red);
+            text-align: center; font-size: 0.9rem;
+        }
+
+        .reset-btn { background: var(--ddpl-red); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <img src="ddpl_logo_original.png" alt="DDPL" class="logo">
+            <h1>Dunfermline Pool League</h1>
+        </div>
+        <button class="reset-btn" onclick="resetFrame()">RESET FRAME</button>
+    </header>
+
+    <div class="timer-container">
+        <div id="display" class="timer-display">60</div>
+        <button id="pause-btn" onclick="togglePause()">PAUSE</button>
+    </div>
+
+    <div class="teams-container">
+        <button id="team1-btn" class="team-btn" onclick="startTeam(1)">
+            <div>
+                <div id="t1-ext-status" class="ext-indicator">EXTENSION AVAILABLE</div>
+                <h2>TEAM 1</h2>
+            </div>
+            <button id="t1-ext-btn" class="btn-extension" onclick="useExtension(1, event)">+30s Extension</button>
+        </button>
+
+        <button id="team2-btn" class="team-btn" onclick="startTeam(2)">
+            <div>
+                <div id="t2-ext-status" class="ext-indicator">EXTENSION AVAILABLE</div>
+                <h2>TEAM 2</h2>
+            </div>
+            <button id="t2-ext-btn" class="btn-extension" onclick="useExtension(2, event)">+30s Extension</button>
+        </button>
+    </div>
+
+    <div class="sponsor-box">
+        SPONSORED BY: [YOUR SPONSOR HERE]
+    </div>
+
+    <audio id="tick-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+    <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock_short_beeps.ogg" preload="auto"></audio>
+
+    <script>
+        let timeLeft = 60;
+        let activeTeam = null;
+        let timer = null;
+        let isPaused = false;
+        let extensionsUsed = { 1: false, 2: false };
+        
+        const tickSound = document.getElementById('tick-sound');
+        const alarmSound = document.getElementById('alarm-
