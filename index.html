@@ -25,13 +25,13 @@
             user-select: none;
         }
 
-        /* Interaction Overlay (Fixes Browser Block) */
+        /* Start Overlay */
         #overlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.9); z-index: 100;
+            background: #000; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        #overlay button { padding: 20px 40px; font-size: 1.5rem; background: var(--ddpl-yellow); border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        #overlay button { padding: 25px 50px; font-size: 1.8rem; background: var(--ddpl-yellow); border: none; border-radius: 15px; cursor: pointer; font-weight: bold; }
 
         header { 
             padding: 10px; background: #000; border-bottom: 3px solid var(--ddpl-yellow);
@@ -40,7 +40,7 @@
         .logo { height: 50px; }
         
         .timer-container { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .timer-display { font-size: 12rem; font-weight: 800; }
+        .timer-display { font-size: 13rem; font-weight: 800; line-height: 1; }
         .warning { color: var(--ddpl-red); animation: blink 0.5s infinite; }
 
         .teams-container { display: flex; height: 35vh; border-top: 2px solid #444; }
@@ -49,12 +49,13 @@
             display: flex; flex-direction: column; justify-content: space-between;
             background: var(--ddpl-grey); outline: none;
         }
-        .active-team { background: #0f301a !important; box-shadow: inset 0 0 30px #00ff0033; }
+        .active-team { background: #0f301a !important; box-shadow: inset 0 0 40px #00ff0044; }
+        .active-team h2 { color: #00ff00; }
         
-        #pause-btn { background: #333; color: white; padding: 10px 30px; border-radius: 20px; border: 1px solid #555; margin-bottom: 20px; font-weight: bold; }
-        .btn-extension { background: var(--ddpl-yellow); border: none; padding: 10px; font-weight: bold; border-radius: 5px; }
+        #pause-btn { background: #333; color: white; padding: 12px 40px; border-radius: 30px; border: 2px solid #555; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; }
+        .btn-extension { background: var(--ddpl-yellow); border: none; padding: 12px; font-weight: bold; border-radius: 5px; text-transform: uppercase; }
         
-        .sponsor-box { background: white; color: black; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-top: 4px solid var(--ddpl-red); }
+        .sponsor-box { background: white; color: black; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-top: 5px solid var(--ddpl-red); }
 
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
@@ -62,15 +63,15 @@
 <body>
 
     <div id="overlay">
-        <img src="ddpl_logo_original.png" style="height: 150px; margin-bottom: 20px;">
-        <button onclick="initApp()">START TIMER APP</button>
-        <p style="margin-top: 20px; color: #888;">Tap to enable audio & controls</p>
+        <img src="ddpl_logo_original.png" style="height: 180px; margin-bottom: 30px;">
+        <button onclick="initApp()">START TIMER</button>
+        <p style="margin-top: 20px; color: var(--ddpl-yellow);">DUNFERMLINE POOL LEAGUE</p>
     </div>
 
     <header>
         <img src="ddpl_logo_original.png" class="logo">
-        <h1 style="font-size: 0.9rem; color: var(--ddpl-yellow);">DUNFERMLINE POOL LEAGUE</h1>
-        <button onclick="location.reload()" style="background:var(--ddpl-red); color:white; border:none; padding:5px 10px; border-radius:4px;">RESET</button>
+        <h1 style="font-size: 1rem; color: var(--ddpl-yellow);">DDPL SHOT CLOCK</h1>
+        <button onclick="location.reload()" style="background:var(--ddpl-red); color:white; border:none; padding:8px 15px; border-radius:4px; font-weight:bold;">RESET FRAME</button>
     </header>
 
     <div class="timer-container">
@@ -80,19 +81,19 @@
 
     <div class="teams-container">
         <button id="team1-btn" class="team-btn" onclick="startTeam(1)">
-            <div><h2>TEAM 1</h2><div id="t1-stat">Extension: Ready</div></div>
+            <div><h2>TEAM 1</h2><div id="t1-stat">EXT: AVAILABLE</div></div>
             <button class="btn-extension" onclick="useExt(1, event)">+30s EXT</button>
         </button>
         <button id="team2-btn" class="team-btn" onclick="startTeam(2)">
-            <div><h2>TEAM 2</h2><div id="t2-stat">Extension: Ready</div></div>
+            <div><h2>TEAM 2</h2><div id="t2-stat">EXT: AVAILABLE</div></div>
             <button class="btn-extension" onclick="useExt(2, event)">+30s EXT</button>
         </button>
     </div>
 
-    <div class="sponsor-box">SPONSORED BY: [YOUR SPONSOR]</div>
+    <div class="sponsor-box">SPONSORED BY: [YOUR SPONSOR NAME]</div>
 
-    <audio id="tick" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-    <audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/alarm_clock_short_beeps.ogg"></audio>
+    <audio id="tick" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+    <audio id="donkey" src="https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptitle=Donkey+Hee+Haw&filename=mt/mtyzoti2ndm5mtyzoty4_Qv_2f_2fR6V880_2bY.mp3" preload="auto"></audio>
 
     <script>
         let timeLeft = 60;
@@ -101,10 +102,18 @@
         let paused = false;
         let extUsed = { 1: false, 2: false };
 
+        const tickSound = document.getElementById('tick');
+        const donkeySound = document.getElementById('donkey');
+
         function initApp() {
-            // Unlocks audio for mobile
-            document.getElementById('tick').play().then(() => {
-                document.getElementById('tick').pause();
+            // Wake up audio context on mobile
+            tickSound.play().then(() => {
+                tickSound.pause();
+                donkeySound.play().then(() => {
+                    donkeySound.pause();
+                    document.getElementById('overlay').style.display = 'none';
+                });
+            }).catch(() => {
                 document.getElementById('overlay').style.display = 'none';
             });
         }
@@ -115,33 +124,39 @@
             paused = false;
             updateUI();
             clearInterval(timer);
-            timer = setInterval(tick, 1000);
+            timer = setInterval(runTick, 1000);
         }
 
-        function tick() {
+        function runTick() {
             if (paused) return;
             timeLeft--;
             document.getElementById('display').innerText = timeLeft;
             
+            // Last 10 seconds warning
             if (timeLeft <= 10 && timeLeft > 0) {
                 document.getElementById('display').classList.add('warning');
-                document.getElementById('tick').currentTime = 0;
-                document.getElementById('tick').play();
+                tickSound.currentTime = 0;
+                tickSound.play();
             } else {
                 document.getElementById('display').classList.remove('warning');
             }
 
+            // Time is up!
             if (timeLeft <= 0) {
                 clearInterval(timer);
-                document.getElementById('alarm').play();
-                document.getElementById('display').innerText = "TIME!";
+                donkeySound.currentTime = 0;
+                donkeySound.play();
+                document.getElementById('display').innerText = "FOUL!";
             }
         }
 
         function togglePause() {
+            if (!timer) return;
             paused = !paused;
-            document.getElementById('pause-btn').innerText = paused ? "RESUME" : "PAUSE";
-            document.getElementById('pause-btn').style.background = paused ? "var(--ddpl-green)" : "#333";
+            const btn = document.getElementById('pause-btn');
+            btn.innerText = paused ? "RESUME" : "PAUSE";
+            btn.style.background = paused ? "var(--ddpl-green)" : "#333";
+            btn.style.color = paused ? "black" : "white";
         }
 
         function useExt(num, e) {
@@ -150,7 +165,8 @@
                 timeLeft += 30;
                 extUsed[num] = true;
                 e.target.disabled = true;
-                document.getElementById(`t${num}-stat`).innerText = "Extension: USED";
+                e.target.style.opacity = "0.3";
+                document.getElementById(`t${num}-stat`).innerText = "EXT: USED";
                 document.getElementById('display').innerText = timeLeft;
             }
         }
@@ -162,3 +178,4 @@
     </script>
 </body>
 </html>
+
