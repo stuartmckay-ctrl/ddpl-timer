@@ -52,4 +52,129 @@
         .active-team { background: #0f301a !important; box-shadow: inset 0 0 40px #00ff0044; }
         .active-team h2 { color: #00ff00; }
         
-        #pause-btn { background: #333; color: white; padding:
+        #pause-btn { background: #333; color: white; padding: 12px 40px; border-radius: 30px; border: 2px solid #555; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; }
+        .btn-extension { background: var(--ddpl-yellow); border: none; padding: 12px; font-weight: bold; border-radius: 5px; text-transform: uppercase; }
+        
+        .sponsor-box { background: white; color: black; height: 55px; display: flex; align-items: center; justify-content: center; font-weight: bold; border-top: 5px solid var(--ddpl-red); }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <img src="ddpl_logo_original.png" style="height: 180px; margin-bottom: 30px;">
+        <button onclick="initApp()">START TIMER</button>
+        <p style="margin-top: 20px; color: var(--ddpl-yellow);">DUNFERMLINE POOL LEAGUE</p>
+    </div>
+
+    <header>
+        <img src="ddpl_logo_original.png" class="logo">
+        <h1 style="font-size: 1rem; color: var(--ddpl-yellow);">DDPL SHOT CLOCK</h1>
+        <button onclick="location.reload()" style="background:var(--ddpl-red); color:white; border:none; padding:8px 15px; border-radius:4px; font-weight:bold;">RESET FRAME</button>
+    </header>
+
+    <div class="timer-container">
+        <div id="display" class="timer-display">60</div>
+        <button id="pause-btn" onclick="togglePause()">PAUSE</button>
+    </div>
+
+    <div class="teams-container">
+        <button id="team1-btn" class="team-btn" onclick="startTeam(1)">
+            <div><h2>TEAM 1</h2><div id="t1-stat">EXT: AVAILABLE</div></div>
+            <button class="btn-extension" onclick="useExt(1, event)">+30s EXT</button>
+        </button>
+        <button id="team2-btn" class="team-btn" onclick="startTeam(2)">
+            <div><h2>TEAM 2</h2><div id="t2-stat">EXT: AVAILABLE</div></div>
+            <button class="btn-extension" onclick="useExt(2, event)">+30s EXT</button>
+        </button>
+    </div>
+
+    <div class="sponsor-box">SPONSORED BY: [YOUR SPONSOR NAME]</div>
+
+    <audio id="tick" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+    <audio id="donkey" src="https://www.soundboard.com/handler/DownLoadTrack.ashx?cliptitle=Donkey+Hee+Haw&filename=mt/mtyzoti2ndm5mtyzoty4_Qv_2f_2fR6V880_2bY.mp3" preload="auto"></audio>
+
+    <script>
+        let timeLeft = 60;
+        let activeTeam = null;
+        let timer = null;
+        let paused = false;
+        let extUsed = { 1: false, 2: false };
+
+        const tickSound = document.getElementById('tick');
+        const donkeySound = document.getElementById('donkey');
+
+        function initApp() {
+            // Wake up audio context on mobile
+            tickSound.play().then(() => {
+                tickSound.pause();
+                donkeySound.play().then(() => {
+                    donkeySound.pause();
+                    document.getElementById('overlay').style.display = 'none';
+                });
+            }).catch(() => {
+                document.getElementById('overlay').style.display = 'none';
+            });
+        }
+
+        function startTeam(num) {
+            activeTeam = num;
+            timeLeft = 60;
+            paused = false;
+            updateUI();
+            clearInterval(timer);
+            timer = setInterval(runTick, 1000);
+        }
+
+        function runTick() {
+            if (paused) return;
+            timeLeft--;
+            document.getElementById('display').innerText = timeLeft;
+            
+            // Last 10 seconds warning
+            if (timeLeft <= 10 && timeLeft > 0) {
+                document.getElementById('display').classList.add('warning');
+                tickSound.currentTime = 0;
+                tickSound.play();
+            } else {
+                document.getElementById('display').classList.remove('warning');
+            }
+
+            // Time is up!
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                donkeySound.currentTime = 0;
+                donkeySound.play();
+                document.getElementById('display').innerText = "FOUL!";
+            }
+        }
+
+        function togglePause() {
+            if (!timer) return;
+            paused = !paused;
+            const btn = document.getElementById('pause-btn');
+            btn.innerText = paused ? "RESUME" : "PAUSE";
+            btn.style.background = paused ? "var(--ddpl-green)" : "#333";
+            btn.style.color = paused ? "black" : "white";
+        }
+
+        function useExt(num, e) {
+            e.stopPropagation();
+            if (activeTeam === num && !extUsed[num]) {
+                timeLeft += 30;
+                extUsed[num] = true;
+                e.target.disabled = true;
+                e.target.style.opacity = "0.3";
+                document.getElementById(`t${num}-stat`).innerText = "EXT: USED";
+                document.getElementById('display').innerText = timeLeft;
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('team1-btn').className = `team-btn ${activeTeam === 1 ? 'active-team' : ''}`;
+            document.getElementById('team2-btn').className = `team-btn ${activeTeam === 2 ? 'active-team' : ''}`;
+        }
+    </script>
+</body>
+</html>
